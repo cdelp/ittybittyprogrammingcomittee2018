@@ -53,10 +53,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private SensorManager sensorManager;
     private int toastDuration = Toast.LENGTH_SHORT;
     private ArrayList locationsList;
-    private int northernMostIndex;
-    private int southernMostIndex;
-    private int westernMostIndex;
-    private int easternMostIndex;
+    private double northernMostLat = 0;
+    private double southernMostLat = 0;
+    private double northSouth;
+    private double westernMostLon = 0;
+    private double easternMostLon = 0;
 
     private boolean logGPS = false;
 
@@ -171,11 +172,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
-        // Add a marker in Sydney and move the camera
-//        LatLng sydney = new LatLng(-34, 151);
-//        mMap.addMarker(new MarkerOptions().position(sydney).title("Marker in Sydney"));
-//        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney));
     }
 
     /**
@@ -192,6 +188,31 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         double lat = location.getLatitude();
         double lon = location.getLongitude();
+
+        //recording max and min lat and lon
+        if (northernMostLat == 0) {
+            northernMostLat = lat;
+        } else if (lat > northernMostLat) {
+            northernMostLat = lat;
+            Log.d("HACC", "northernmost lat set to: " + lat);
+        }
+
+        if (southernMostLat == 0) {
+            southernMostLat = lat;
+        } else if (lat < southernMostLat) {
+            southernMostLat = lat;
+            Log.d("HACC", "southernmost lat set to: " + lat);
+        }
+
+        // TODO need to add longitude section
+
+        // TODO need to fix distance calculation
+        northSouth = (northernMostLat - southernMostLat) * 113000;
+
+        Log.d("HACC", "northernmost: " + northernMostLat + ", southernmost: "
+                + southernMostLat + ", difference: " + northSouth + " m");
+
+
         LatLng latLng = new LatLng( lat, lon );
         Log.d("HACC", "lat: " + lat + ", lon: " + lon);
         Log.d("HACC", "location list: " + locationsList.size());
