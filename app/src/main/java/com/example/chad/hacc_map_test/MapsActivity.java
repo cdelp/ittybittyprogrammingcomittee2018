@@ -58,6 +58,9 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private double northSouth;
     private double westernMostLon = 0;
     private double easternMostLon = 0;
+    private double diagonalDist;
+    private double eastWest;
+    private double area;
 
     private boolean logGPS = false;
 
@@ -189,7 +192,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         double lat = location.getLatitude();
         double lon = location.getLongitude();
 
-        //recording max and min lat and lon
+        //recording max and min lat and lon, currently assumes user is in Northern and Western hemisphere
         if (northernMostLat == 0) {
             northernMostLat = lat;
         } else if (lat > northernMostLat) {
@@ -204,13 +207,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             Log.d("HACC", "southernmost lat set to: " + lat);
         }
 
-        // TODO need to add longitude section
+        if (easternMostLon == 0) {
+            easternMostLon = lon;
+        } else if (lon > easternMostLon ) {
+            easternMostLon = lon;
+            Log.d("HACC", "easternmost lon set to: " + lon);
+        }
+
+        if (westernMostLon == 0) {
+            westernMostLon = lon;
+        } else if (lon < westernMostLon ) {
+            westernMostLon = lon;
+            Log.d("HACC", "westernmost lon set to: " + lon);
+        }
 
         // TODO need to fix distance calculation
         northSouth = (northernMostLat - southernMostLat) * 113000;
+        diagonalDist = meterDistanceBetweenPoints((float) northernMostLat, (float) westernMostLon,
+                (float) southernMostLat, (float) easternMostLon);
 
         Log.d("HACC", "northernmost: " + northernMostLat + ", southernmost: "
-                + southernMostLat + ", difference: " + northSouth + " m");
+                + southernMostLat);
+        Log.d("HACC", "easternmost: " + easternMostLon + ", westernmost: "
+                + westernMostLon);
+        Log.d ("HACC", "North-South difference: " + northSouth + " m, diagonal dist: " +
+        diagonalDist);
+
+        double aSquare = Math.pow(diagonalDist, 2) - Math.pow(northSouth, 2);
+        eastWest = Math.sqrt(aSquare);
+        area = eastWest * northSouth;
+        Log.d("HACC", "area: " + area);
 
 
         LatLng latLng = new LatLng( lat, lon );
@@ -227,6 +253,22 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         } else {
             Log.d("HACC", "GPS NOT being logged");
         }
+    }
+
+    private double meterDistanceBetweenPoints(float lat_a, float lng_a, float lat_b, float lng_b) {
+        float pk = (float) (180.f/Math.PI);
+
+        float a1 = lat_a / pk;
+        float a2 = lng_a / pk;
+        float b1 = lat_b / pk;
+        float b2 = lng_b / pk;
+
+        double t1 = Math.cos(a1) * Math.cos(a2) * Math.cos(b1) * Math.cos(b2);
+        double t2 = Math.cos(a1) * Math.sin(a2) * Math.cos(b1) * Math.sin(b2);
+        double t3 = Math.sin(a1) * Math.sin(b1);
+        double tt = Math.acos(t1 + t2 + t3);
+
+        return 6366000 * tt;
     }
 
     protected void startLocationUpdates() {
